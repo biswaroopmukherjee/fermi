@@ -415,7 +415,7 @@ def testcallback():
 @click.option('--grpc-deadline', default=DEFAULT_GRPC_DEADLINE,
               metavar='<grpc deadline>', show_default=True,
               help='gRPC deadline in seconds')
-@click.option('--model', default='Fermi 3.pmdl',
+@click.option('--model', default='resources/Fermi 3.pmdl',
         metavar='<snowboy model>', show_default=True,
         help='Snowboy model for hotword')
 
