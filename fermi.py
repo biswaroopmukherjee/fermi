@@ -5,6 +5,8 @@
 
 
 # Imports
+
+# imports for snowboy
 import snowboydecoder
 import sys
 import signal
@@ -16,6 +18,7 @@ import re
 import click
 from gtts import gTTS
 
+# imports for google assistant
 import grpc
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -25,9 +28,19 @@ from google.assistant.embedded.v1alpha1 import embedded_assistant_pb2
 from google.rpc import code_pb2
 from tenacity import retry, stop_after_attempt, retry_if_exception
 
-
 import assistant_helpers
 import audio_helpers
+
+# imports for keyboard
+import io
+import sys
+import serial
+from time import sleep
+from keyconverter import keyboard
+
+# imports for switchmate
+import switchmate
+
 
 
 # Initialization
@@ -40,23 +53,71 @@ DEFAULT_GRPC_DEADLINE = 60 * 3 + 5
 interrupted = False
 start_stop = True
 
+ser = None
+serio = None
+switch = None
+
+quiet = False
+
+
 # Signal handlers for snowboy
 def signal_handler(signal, frame):
     global interrupted
     interrupted = True
 
-
 def interrupt_callback():
     global interrupted
     return interrupted
 
+
+# Text to speech
 def speaktext(mytext):
-    myobj = gTTS(text=mytext, lang='en-us', slow=False)
-    myobj.save("text.mp3")
+    """ Use by typing speaktext('textstring') """
+    if not quiet:
+        myobj = gTTS(text=mytext, lang='en-us', slow=False)
+        myobj.save("text.mp3")
+        # Play the converted file
+        os.system("mpg321 text.mp3 -q")
 
-    # Playing the converted file
-    os.system("mpg321 text.mp3 -q")
 
+
+# Functions for the keyboard
+def errorhandler(err, exitonerror=True):
+    """Display an error message and exit gracefully on errors from the serial"""
+    logger.error("ERROR: " + err.message)
+    if exitonerror:
+        ser.close()
+        sys.exit(-3)
+
+def atcommand(command, delayms=0):
+    """Executes the supplied AT command and waits for a valid response"""
+    serio.write(command + "\n")
+    logger = logging.getLogger("fermi")
+    logger.info(command+"\r\n")
+
+    if (delayms != 0):
+        sleep(delayms/1000)
+
+    rx = None
+    while rx != b"OK!\r\n" and rx != "FAILED!\r\n":
+        rx = ser.readline()
+        logger.debug(str(rx))
+    # Check the return value
+    if rx == "FAILED!\r\n":
+        raise ValueError("AT Parser reported an error on '" + command.rstrip() + "'")
+
+def keysend(letter, modifier=None):
+    """ a simpler keyboard"""
+    try:
+        atcommand("AT+BleKeyboardCode="+keyboard(letter, modifier))
+    except ValueError as err:
+        errorhandler(err)
+    except KeyboardInterrupt:
+        ser.close()
+        sys.exit()
+
+
+# NLP preprocessor for lab related stuff. If this fails, fall back on google
 def labwork(text):
     ''' Very hacky NLP on the text blob '''
     playstandard = False
@@ -69,9 +130,11 @@ def labwork(text):
         if 'lithium' in words:
             logger.info('CTRL-L')
             speaktext('Turning on lithium mott')
+            keysend('L', 'Ctrl')
         elif 'sodium' in words:
             speaktext('Turning on sodium mott')
             logger.info('CTRL-N')
+            keysend('N', 'Ctrl')
         else:
             speaktext('Please specify the atom.')
              # need to make it more conversational: Sodium or lithium? Context needed
@@ -80,31 +143,48 @@ def labwork(text):
         if 'lithium' in words:
             speaktext('Turning on lithium pumping')
             logger.info('CTRL-P')
+            keysend('P', 'Ctrl')
         elif 'sodium' in words:
             speaktext('Turning on sodium pumping')
             logger.info('CTRL-Q')
+            keysend('Q', 'Ctrl')
         else:
             speaktext('Please specify the atom')
             logger.info('unknown atom')
     elif 'imaging' in words:
         speaktext('Turning on imaging')
         logger.info('CTRL-I')
+        keysend('I', 'Ctrl')
     elif 'abort' in words:
         speaktext('Aborting')
         logger.info('esc')
+        keysend('escape')
     elif 'run' in words or 'running' in words and 'trap' not in words:
         if 'list' in words:
             speaktext('Running list')
             logger.info('F12')
+            keysend('F12')
         elif 'background' in words:
             speaktext('Running in background')
             logger.info('CTRL-F9')
+            keysend('F9')
         else:
             speaktext('Running sequence')
             logger.info('F9')
+            keysend('F9')
     elif 'stop' in words or 'control' in words or 'nothing' in words:
         speaktext('Okay. Doing nothing.')
         logger.info('CTRL-Z')
+        keysend('Z', 'Ctrl')
+    elif 'lights' in words or 'room' in words:
+        if 'off' in words:
+            switch.turn_off()
+        else:
+            switch.turn_on()
+    elif 'quiet' in words or 'shut' in words:
+        quiet = True
+    elif 'speak' in words or 'speaking' in words:
+        quiet = False
     else:
         # Run standard google response
         # speaktext("Sorry I didn't understand that.")
@@ -250,6 +330,8 @@ def testcallback():
     logger = logging.getLogger("fermi")
     logger.info('Hi! Speak friend.')
 
+
+# Click options for fermi.py
 @click.command()
 @click.option('--api-endpoint', default=ASSISTANT_API_ENDPOINT,
               metavar='<api endpoint>', show_default=True,
@@ -299,6 +381,7 @@ def testcallback():
         help='Snowboy model for hotword')
 
 
+# Main function.
 
 def main(api_endpoint, credentials, verbose,
          audio_sample_rate, audio_sample_width,
@@ -318,6 +401,14 @@ def main(api_endpoint, credentials, verbose,
 
     signal.signal(signal.SIGINT, signal_handler)
 
+    # Setup the serial connection to the keyboard
+    ser = serial.Serial(port='/dev/ttyACM0', baudrate=115200, rtscts=True)
+    serio = io.TextIOWrapper(io.BufferedRWPair(ser,ser,1), newline='\r\n', line_buffering=True)
+
+    # Setup the switchmate
+    switch = switchmate.Switch()
+
+    # Start listening with snowboy
     detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5)
     print('Listening... Press Ctrl+C to exit')
 
