@@ -41,6 +41,8 @@ from keyconverter import keyboard
 # imports for switchmate
 import switchmate
 
+# imports for arxiv reader
+from arxiv_reader import Reader
 
 
 # Initialization
@@ -177,16 +179,22 @@ def labwork(text):
         logger.info('CTRL-Z')
         keysend('Z', 'Ctrl')
     elif 'lights' in words or 'room' in words:
-        if 'off' in words:
-            switch.turn_off()
-        else:
-            switch.turn_on()
+        try:
+            if 'off' in words:
+                speaktext('Turning off room lights.')
+                switch.turn_off()
+            else:
+                speaktext('Turning on room lights.')
+                switch.turn_on()
+        except:
+            speaktext("I'm sorry. I can't connect to the light switch right now.")
+            logger.error('Cant talk to the switchmate')
     elif 'quiet' in words or 'shut' in words:
         quiet = True
         logger.info('turning off text to speech')
     elif 'stupid' in words:
         logger.info('theyre being mean')
-        speaktext("I'm doing my best. Please try not to be mean to me.") 
+        speaktext("I'm doing my best. Please try not to be mean to me.")
     elif 'speak' in words or 'speaking' in words:
         quiet = False
         speaktext("Thank you. I've been dying to talk.")
@@ -195,10 +203,27 @@ def labwork(text):
         speaktext('why')
         logger.info('why')
     elif 'why' in words:
-        speaktext('Because you told me to.')
+        speaktext('Because you told me so.')
         logger.info('Classic matlab')
     elif 'igor' in words:
         speaktext('Igor? I prefer python.')
+    elif 'morning' in words:
+        speaktext('Good morning!')
+    elif 'papers' in words or 'paper' in words or 'archive' in words:
+        logger.info('checking the arxiv')
+        speaktext("Hold on while I check the archive.')
+        reader = Reader(detailed=True)
+        try:
+            reader.download_info()
+        except:
+            speaktext("Sorry. I couldn't connect to the archive")
+            logger.error('Cant connect or download the interest list')
+        try:
+            text_to_say = reader.read_arxiv()
+            speaktext(text_to_say)
+        except:
+            speaktext("I'm sorry. I can't do that right now.")
+            logger.error('Cant read the arxiv')
     else:
         # Run standard google response
         # speaktext("Sorry I didn't understand that.")
