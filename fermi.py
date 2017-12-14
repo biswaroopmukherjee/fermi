@@ -183,8 +183,22 @@ def labwork(text):
             switch.turn_on()
     elif 'quiet' in words or 'shut' in words:
         quiet = True
+        logger.info('turning off text to speech')
+    elif 'stupid' in words:
+        logger.info('theyre being mean')
+        speaktext("I'm doing my best. Please try not to be mean to me.") 
     elif 'speak' in words or 'speaking' in words:
         quiet = False
+        speaktext("Thank you. I've been dying to talk.")
+        logger.info('turning off text to speech')
+    elif 'name' in words:
+        speaktext('why')
+        logger.info('why')
+    elif 'why' in words:
+        speaktext('Because you told me to.')
+        logger.info('Classic matlab')
+    elif 'igor' in words:
+        speaktext('Igor? I prefer python.')
     else:
         # Run standard google response
         # speaktext("Sorry I didn't understand that.")
