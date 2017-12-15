@@ -16,33 +16,23 @@ class Reader(object):
                                  start_index=0, max_index=30, sort_by='submittedDate')
 
         p_ = '../interesting_authors.csv'
-        if not os.path.isfile(p_):
-            url = "https://www.dropbox.com/s/yismcsi2ti35qse/interesting_authors.csv?dl=1"
-            u = urllib.request.urlopen(url)
-            data = u.read()
-            u.close()
-            # Create folder
-        #     os.makedirs(os.path.split(p_)[0], exist_ok=True)
-            with open(p_, "wb") as f :
-                f.write(data)
-        # authors = pd.read_csv( p_, header=None , squeeze=True)
-        # self.interesting_authors = authors.squeeze().tolist()
+        url = "https://www.dropbox.com/s/yismcsi2ti35qse/interesting_authors.csv?dl=1"
+        u = urllib.request.urlopen(url)
+        data = u.read()
+        u.close()
+        with open(p_, "wb") as f :
+            f.write(data)
         with open(p_, 'r') as my_file:
             reader = csv.reader(my_file, delimiter=',')
             self.interesting_authors = list(reader)[0]
 
         p_ = '../interesting_keywords.csv'
-        if not os.path.isfile(p_):
-            url = "https://www.dropbox.com/s/u9pqzmomoa0jgmm/interesting_keywords.csv?dl=1"
-            u = urllib.request.urlopen(url)
-            data = u.read()
-            u.close()
-            # Create folder
-        #     os.makedirs(os.path.split(p_)[0], exist_ok=True)
-            with open(p_, "wb") as f :
-                f.write(data)
-        # keywords = pd.read_csv( p_, header=None , squeeze=True)
-        # self.interesting_title_keywords = authors.squeeze().tolist()
+        url = "https://www.dropbox.com/s/u9pqzmomoa0jgmm/interesting_keywords.csv?dl=1"
+        u = urllib.request.urlopen(url)
+        data = u.read()
+        u.close()
+        with open(p_, "wb") as f :
+            f.write(data)
         with open(p_, 'r') as my_file:
             reader = csv.reader(my_file, delimiter=',')
             self.interesting_title_keywords = list(reader)[0]
@@ -91,5 +81,6 @@ class Reader(object):
             else:
                 thing_to_say += " I couldn't find any articles that match your interests. Check again later."
 
+        thing_to_say = re.sub(' +', ' ', thing_to_say)
 
         return thing_to_say
