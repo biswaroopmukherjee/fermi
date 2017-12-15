@@ -211,7 +211,7 @@ def labwork(text):
         speaktext('Good morning!')
     elif 'papers' in words or 'paper' in words or 'archive' in words:
         logger.info('checking the arxiv')
-        speaktext("Hold on while I check the archive.')
+        speaktext("Hold on while I check the archive.")
         reader = Reader(detailed=True)
         try:
             reader.download_info()
@@ -377,8 +377,7 @@ def testcallback():
               help='Address of Google Assistant API service.')
 @click.option('--credentials',
               metavar='<credentials>', show_default=True,
-              default=os.path.join(click.get_app_dir('google-oauthlib-tool'),
-                                   'credentials.json'),
+              default='/home/pi/.config/google-oauthlib-tool/credentials.json',
               help='Path to read OAuth2 credentials.')
 @click.option('--verbose', '-v', is_flag=True, default=False,
               help='Verbose logger.')
@@ -499,13 +498,11 @@ def main(api_endpoint, credentials, verbose,
 
     with FermiAssistant(conversation_stream, grpc_channel, grpc_deadline) as assistant:
         # main loop
-        detector.start(detected_callback=assistant.converse,
-                    interrupt_check=interrupt_callback,
-                    sleep_time=0.03)
+        #detector.start(detected_callback=assistant.converse,
+                    #interrupt_check=interrupt_callback,
+                    #sleep_time=0.03)
 
-        detector.start(detected_callback=testcallback,
-                    interrupt_check=interrupt_callback,
-                    sleep_time=0.03)
+        detector.start(detected_callback=testcallback, interrupt_check=interrupt_callback, sleep_time=0.03)
 
     conversation_stream.close()
 

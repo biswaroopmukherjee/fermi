@@ -5,7 +5,7 @@ import unidecode
 import re
 import os
 import urllib
-import pandas as pd
+import csv
 
 class Reader(object):
     def __init__(self, detailed=True):
@@ -25,8 +25,11 @@ class Reader(object):
         #     os.makedirs(os.path.split(p_)[0], exist_ok=True)
             with open(p_, "wb") as f :
                 f.write(data)
-        authors = pd.read_csv( p_, header=None , squeeze=True)
-        self.interesting_authors = authors.squeeze().tolist()
+        # authors = pd.read_csv( p_, header=None , squeeze=True)
+        # self.interesting_authors = authors.squeeze().tolist()
+        with open(p_, 'r') as my_file:
+            reader = csv.reader(my_file, delimiter=',')
+            self.interesting_authors = list(reader)[0]
 
         p_ = '../interesting_keywords.csv'
         if not os.path.isfile(p_):
@@ -38,8 +41,11 @@ class Reader(object):
         #     os.makedirs(os.path.split(p_)[0], exist_ok=True)
             with open(p_, "wb") as f :
                 f.write(data)
-        keywords = pd.read_csv( p_, header=None , squeeze=True)
-        self.interesting_title_keywords = authors.squeeze().tolist()
+        # keywords = pd.read_csv( p_, header=None , squeeze=True)
+        # self.interesting_title_keywords = authors.squeeze().tolist()
+        with open(p_, 'r') as my_file:
+            reader = csv.reader(my_file, delimiter=',')
+            self.interesting_title_keywords = list(reader)[0]
 
 
     def read_arxiv(self):
