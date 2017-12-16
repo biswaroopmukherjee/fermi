@@ -86,11 +86,11 @@ def interrupt_callback():
 # Text to speech
 def speaktext(mytext):
     """ Use by typing speaktext('textstring') """
-    if not quiet:
-        myobj = gTTS(text=mytext, lang='en-us', slow=False)
-        myobj.save("text.mp3")
-        # Play the converted file
-        os.system("mpg321 text.mp3 -q")
+##    if not quiet:
+##        myobj = gTTS(text=mytext, lang='en-us', slow=False)
+##        myobj.save("text.mp3")
+##        # Play the converted file
+##        os.system("cvlc --play-and-exit text.mp3")
 
 
 
@@ -441,7 +441,7 @@ serio = io.TextIOWrapper(io.BufferedRWPair(ser,ser,1), newline='\r\n', line_buff
 switch = switchmate.Switch()
 
 # Start listening with snowboy
-detector = snowboydecoder.HotwordDetector(model, sensitivity=0.5)
+detector = snowboydecoder.HotwordDetector(model, sensitivity=0.6)
 print('Listening... Press Ctrl+C to exit')
 
 # Load OAuth 2.0 credentials.
