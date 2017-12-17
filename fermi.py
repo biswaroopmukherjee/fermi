@@ -10,6 +10,7 @@
 import snowboydecoder
 import sys
 import signal
+import subprocess
 
 import json
 import logging
@@ -17,6 +18,8 @@ import os
 import re
 import click
 from gtts import gTTS
+import wave
+import contextlib
 
 # imports for google assistant
 import grpc
@@ -84,13 +87,26 @@ def interrupt_callback():
 
 
 # Text to speech
-def speaktext(mytext):
-    """ Use by typing speaktext('textstring') """
-##    if not quiet:
-##        myobj = gTTS(text=mytext, lang='en-us', slow=False)
-##        myobj.save("text.mp3")
-##        # Play the converted file
-##        os.system("cvlc --play-and-exit text.mp3")
+class TTS(object):
+    def __init__(self, conversation_stream):
+        self.conversation_stream = conversation_stream
+    def speaktext(self, mytext):
+        """ Use by typing speaktext('textstring') """
+        if not quiet:
+            logger = logging.getLogger("fermi")
+            myobj = gTTS(text=mytext, lang='en-us', slow=False)
+            myobj.save("text.mp3")
+            # Resample
+            logger.info("resampling")
+            os.system("sox text.mp3 -r 16000 text_r.wav")
+            logger.info("resampling successful")
+            # Play the converted file
+            with contextlib.closing(wave.open("text_r.wav", "r")) as f:
+                frames = f.getnframes()
+                logger.info(str(frames)+" frames to speak")
+                data = f.readframes(frames)
+                self.conversation_stream.write(data)
+            
 
 
 
@@ -98,9 +114,9 @@ def speaktext(mytext):
 def errorhandler(err, exitonerror=True):
     """Display an error message and exit gracefully on errors from the serial"""
     logger.error("ERROR: " + err.message)
-    if exitonerror:
-        ser.close()
-        sys.exit(-3)
+##    if exitonerror:
+##        ser.close()
+##        sys.exit(-3)
 
 def atcommand(command, delayms=0):
     """Executes the supplied AT command and waits for a valid response"""
@@ -131,72 +147,73 @@ def keysend(letter, modifier=None):
 
 
 # NLP preprocessor for lab related stuff. If this fails, fall back on google
-def labwork(text, quiet):
+def labwork(text, quiet, conversation_stream):
     ''' Very hacky NLP on the text blob '''
     playstandard = False
     quietout = quiet
     logger = logging.getLogger("fermi")
     text = text.lower()
     words = re.split(' ', text)
+    speaker = TTS(conversation_stream)
     if 'listen' in words: words = words + ['lithium']
     if 'soda' in words: words = words + ['sodium']
     if 'trap' in words or ('pumping' not in words and 'imaging' not in words and ('sodium' in words or 'lithium' in words)):
         if 'lithium' in words:
             logger.info('CTRL-L')
-            if not quiet: speaktext('Turning on lithium mott')
+            if not quiet: speaker.speaktext('Turning on lithium mott')
             keysend('L', 'Ctrl')
         elif 'sodium' in words:
-            if not quiet: speaktext('Turning on sodium mott')
+            if not quiet: speaker.speaktext('Turning on sodium mott')
             logger.info('CTRL-N')
             keysend('N', 'Ctrl')
         else:
-            if not quiet: speaktext('Please specify the atom.')
+            if not quiet: speaker.speaktext('Please specify the atom.')
              # need to make it more conversational: Sodium or lithium? Context needed
             logger.info('unknown atom')
     elif 'pumping' in words:
         if 'lithium' in words:
-            if not quiet: speaktext('Turning on lithium pumping')
+            if not quiet: speaker.speaktext('Turning on lithium pumping')
             logger.info('CTRL-P')
             keysend('P', 'Ctrl')
         elif 'sodium' in words:
-            if not quiet: speaktext('Turning on sodium pumping')
+            if not quiet: speaker.speaktext('Turning on sodium pumping')
             logger.info('CTRL-Q')
             keysend('Q', 'Ctrl')
         else:
-            if not quiet: speaktext('Please specify the atom')
+            if not quiet: speaker.speaktext('Please specify the atom')
             logger.info('unknown atom')
     elif 'imaging' in words:
-        if not quiet: speaktext('Turning on imaging')
+        if not quiet: speaker.speaktext('Turning on imaging')
         logger.info('CTRL-I')
         keysend('I', 'Ctrl')
     elif 'abort' in words:
-        if not quiet: speaktext('Aborting')
+        if not quiet: speaker.speaktext('Aborting')
         logger.info('esc')
         keysend('escape')
     elif 'run' in words or 'running' in words and 'trap' not in words:
         if 'list' in words or 'twelve' in words:
-            if not quiet: speaktext('Running list')
+            if not quiet: speaker.speaktext('Running list')
             logger.info('F12')
             keysend('F12')
         elif 'background' in words:
-            if not quiet: speaktext('Running in background')
+            if not quiet: speaker.speaktext('Running in background')
             logger.info('CTRL-F9')
             keysend('F9')
         else:
-            if not quiet: speaktext('Running sequence')
+            if not quiet: speaker.speaktext('Running sequence')
             logger.info('F9')
             keysend('F9')
     elif 'stop' in words or 'control' in words or 'nothing' in words:
-        if not quiet: speaktext('Okay. Doing nothing.')
+        if not quiet: speaker.speaktext('Okay. Doing nothing.')
         logger.info('CTRL-Z')
         keysend('Z', 'Ctrl')
     elif 'lights' in words or 'room' in words:
         try:
             if 'off' in words:
-                if not quiet: speaktext('Turning off room lights.')
+                if not quiet: speaker.speaktext('Turning off room lights.')
                 switch.turn_off()
             else:
-                if not quiet: speaktext('Turning on room lights.')
+                if not quiet: speaker.speaktext('Turning on room lights.')
                 switch.turn_on()
         except:
             logger.debug('well I need to fix this error')
@@ -205,43 +222,44 @@ def labwork(text, quiet):
         logger.info('turning off text to speech')
     elif 'stupid' in words:
         logger.info('theyre being mean')
-        if not quiet: speaktext("I'm doing my best. Please try not to be mean to me.")
+        if not quiet: speaker.speaktext("I'm doing my best. Please try not to be mean to me.")
     elif 'speak' in words or 'speaking' in words:
         quietout = False
-        speaktext("Thank you. I've been dying to talk.")
+        if quiet: speaker.speaktext("Thank you. I've been dying to talk.")
+        else: speaker.speaktext("Thank you, but I can already talk.")
         logger.info('turning on text to speech')
     elif 'name' in words:
-        if not quiet: speaktext('why')
+        if not quiet: speaker.speaktext('why')
         logger.info('why')
     elif 'why' in words:
-        if not quiet: speaktext('Because you told me so.')
+        if not quiet: speaker.speaktext('Because you told me so.')
         logger.info('Classic matlab')
     elif 'igor' in words:
-        if not quiet: speaktext('Igor? I prefer python.')
+        if not quiet: speaker.speaktext('Igor? I prefer python.')
     elif 'morning' in words:
-        if not quiet: speaktext('Good morning!')
+        if not quiet: speaker.speaktext('Good morning!')
     elif 'papers' in words or 'paper' in words or 'archive' in words:
         logger.info('checking the arxiv')
-        if not quiet: speaktext("Hold on while I check the archive.")
+        if not quiet: speaker.speaktext("Hold on while I check the archive.")
         reader = Reader(detailed=True)
         try:
             reader.download_info()
         except:
-            if not quiet: speaktext("Sorry. I couldn't connect to the archive")
+            if not quiet: speaker.speaktext("Sorry. I couldn't connect to the archive")
             logger.error('Cant connect or download the interest list')
         try:
             text_to_say = reader.read_arxiv()
-            if not quiet: speaktext(text_to_say)
+            if not quiet: speaker.speaktext(text_to_say)
             logger.info(text_to_say)
         except:
-            if not quiet: speaktext("I'm sorry. I can't do that right now.")
+            if not quiet: speaker.speaktext("I'm sorry. I can't do that right now.")
             logger.error('Cant read the arxiv')
     elif 'pod' in words or 'bay' in words or 'door' in words:
-        if not quiet: speaktext("I'm sorry Dave. I'm afraid I can't do that")
+        if not quiet: speaker.speaktext("I'm sorry Dave. I'm afraid I can't do that")
         logger.info('Hal')
     else:
         # Run standard google response
-        # speaktext("Sorry I didn't understand that.")
+        # speaker.speaktext("Sorry I didn't understand that.")
         playstandard = True
     return playstandard, quietout
 
@@ -353,7 +371,7 @@ class FermiAssistant(object):
             if resp.result.spoken_request_text:
                 self.logger.info('Transcript of user request: "%s".',
                              resp.result.spoken_request_text)
-                playstandard, self.quiet = labwork(resp.result.spoken_request_text, self.quiet)
+                playstandard, self.quiet = labwork(resp.result.spoken_request_text, self.quiet, self.conversation_stream)
                 # playstandard = True
                 if playstandard:
                     self.logger.info('Playing assistant response.')
@@ -419,6 +437,7 @@ def testCallback():
 
 def fermiCallback():
     detector.terminate()
+##    os.system('mplayer resources/dong.wav')
     assistant.converse()
     detector.start(detected_callback=callback_to_use, interrupt_check=interrupt_callback,sleep_time=0.03)
 
