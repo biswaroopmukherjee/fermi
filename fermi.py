@@ -437,7 +437,7 @@ def testCallback():
 
 def fermiCallback():
     detector.terminate()
-##    os.system('mplayer resources/dong.wav')
+    os.system('mplayer resources/dong.wav')
     assistant.converse()
     detector.start(detected_callback=callback_to_use, interrupt_check=interrupt_callback,sleep_time=0.03)
 
