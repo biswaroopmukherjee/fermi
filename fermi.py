@@ -190,7 +190,7 @@ def labwork(text, quiet, conversation_stream):
         if not quiet: speaker.speaktext('Aborting')
         logger.info('esc')
         keysend('escape')
-    elif 'run' in words or 'running' in words and 'trap' not in words:
+    elif 'run' in words or 'running' in words or 'sequence' in words and 'trap' not in words:
         if 'list' in words or 'twelve' in words:
             if not quiet: speaker.speaktext('Running list')
             logger.info('F12')
