@@ -65,14 +65,14 @@ class FermiAssistant(object):
                 http_request = google.auth.transport.requests.Request()
                 credentials.refresh(http_request)
         except Exception as e:
-            logger.error('Error loading credentials: %s', e)
-            logger.error('Run google-oauthlib-tool to initialize '
+            self.logger.error('Error loading credentials: %s', e)
+            self.logger.error('Run google-oauthlib-tool to initialize '
                           'new OAuth 2.0 credentials.')
 
         # Create an authorized gRPC channel.
         grpc_channel = google.auth.transport.grpc.secure_authorized_channel(
             credentials, http_request, api_endpoint)
-        logger.info('Connecting to %s', api_endpoint)
+        self.logger.info('Connecting to %s', api_endpoint)
 
         self.assistant = embedded_assistant_pb2.EmbeddedAssistantStub(grpc_channel)
 

@@ -17,8 +17,8 @@ class Keyboard(object):
 	""" A Keyboard class"""
 	def __init__(self, port='/dev/ttyACM0'):
 		self.ser = serial.Serial(port='/dev/ttyACM0', baudrate=115200, rtscts=True)
-		self.serio = io.TextIOWrapper(io.BufferedRWPair(ser,ser,1), newline='\r\n', line_buffering=True)
-	    self.logger = logging.getLogger("fermi")
+		self.serio = io.TextIOWrapper(io.BufferedRWPair(self.ser,self.ser,1), newline='\r\n', line_buffering=True)
+		self.logger = logging.getLogger("fermi")
 
 
 	def keysend(letter, modifier=None):
@@ -29,8 +29,7 @@ class Keyboard(object):
 	    try:
 	        self.atcommand("AT+BleKeyboardCode="+HIDkeyboard(letter, modifier))
 	    except:
-			# raise ValueError
-			self.logger.error("Can't type! Check the bluetooth keyboard pairing.")
+                self.logger.error("Can't type! Check the bluetooth keyboard pairing.")
 
 
 	def atcommand(command):
