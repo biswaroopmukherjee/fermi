@@ -1,3 +1,10 @@
+
+/*********************************************************************
+  Modified Bluefruit HID keyboard example from adafruit. Now I can send
+  modified keyboard codes, and a bunch of keys, using the standard
+  HID key codes. 
+*********************************************************************/
+
 /*********************************************************************
  This is an example for our nRF51822 based Bluefruit LE modules
 

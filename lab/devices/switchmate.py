@@ -1,9 +1,19 @@
+
+##################################################
+#
+# A driver for switchmate switches
+#
+# 2017
+# Biswaroop Mukherjee
+#
+##################################################
+
 import struct
 import sys
 import ctypes
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, ADDR_TYPE_RANDOM
 from binascii import hexlify, unhexlify
-
+import logging
 
 SWITCHMATE_SERVICE = '23d1bcea5f782315deef121223150000'
 NOTIFY_VALUE = struct.pack('<BB', 0x01, 0x00)
@@ -60,20 +70,22 @@ class NotificationDelegate(DefaultDelegate):
 
 class Switch(object):
 	""" A switch class for switchmate switches """
-	
+
 	def __init__(self, mac_address='c1:59:2c:b2:8d:33', auth_key=b'C84FE8BB'):
 		""" return a switch object with the right mac_address and auth"""
 		self.mac_address = mac_address
 		self.auth_key = auth_key
+		self.logger = logging.getLogger('fermi')
 
 	def switch(self, state):
-		""" Switch the switchmate on or off 
+		""" Switch the switchmate on or off
 		Usage: switch('on')
 		"""
+		logger.info('Setting up switch connection')
 		device = Peripheral(self.mac_address, ADDR_TYPE_RANDOM)
 		notifications = NotificationDelegate(device)
 		device.setDelegate(notifications)
-		
+		logger.info('Sending switch command')
 		auth_key = unhexlify(self.auth_key)
 		device.writeCharacteristic(STATE_NOTIFY_HANDLE, NOTIFY_VALUE, True)
 		if state == 'on':
@@ -81,16 +93,21 @@ class Switch(object):
 		else:
 			val = b'\x00'
 		device.writeCharacteristic(STATE_HANDLE, sign(b'\x01' + val, auth_key))
-		print('Waiting for response', end='')
+		self.logger.info('Waiting for switch response')
 		while True:
 			device.waitForNotifications(0.1)
 			print('.', end='')
 			sys.stdout.flush()
-		
+
 	# Functions for a cleaner interface
 	def turn_on(self):
-		self.switch('on')
-	
+		try:
+			self.switch('on')
+		except:
+			self.logger.error("Can't switch the switch")
+
 	def turn_off(self):
-		self.switch('off')
-	
+		try:
+			self.switch('off')
+		except:
+			self.logger.error("Can't switch the switch")

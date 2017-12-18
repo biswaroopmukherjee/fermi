@@ -1,3 +1,13 @@
+
+##################################################################
+#
+# arxiv_reader: Reads the arXiv so that you don't have to
+#
+# 2017
+# Biswaroop Mukherjee
+#
+##################################################################
+
 import arxivpy
 import datetime
 from itertools import compress
@@ -6,6 +16,7 @@ import re
 import os
 import urllib
 import csv
+import logging
 
 class Reader(object):
     def __init__(self, detailed=True):
@@ -15,7 +26,7 @@ class Reader(object):
         self.articles = arxivpy.query(search_query=['cond-mat.quant-gas'],
                                  start_index=0, max_index=30, sort_by='submittedDate')
 
-        p_ = '../interesting_authors.csv'
+        p_ = 'interesting_authors.csv'
         url = "https://www.dropbox.com/s/yismcsi2ti35qse/interesting_authors.csv?dl=1"
         u = urllib.request.urlopen(url)
         data = u.read()
@@ -26,7 +37,7 @@ class Reader(object):
             reader = csv.reader(my_file, delimiter=',')
             self.interesting_authors = list(reader)[0]
 
-        p_ = '../interesting_keywords.csv'
+        p_ = 'interesting_keywords.csv'
         url = "https://www.dropbox.com/s/u9pqzmomoa0jgmm/interesting_keywords.csv?dl=1"
         u = urllib.request.urlopen(url)
         data = u.read()
