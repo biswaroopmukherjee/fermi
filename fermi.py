@@ -155,7 +155,7 @@ def labwork(text, quiet, conversation_stream):
     text = text.lower()
     words = re.split(' ', text)
     speaker = TTS(conversation_stream)
-    if 'listen' in words: words = words + ['lithium']
+    if 'listen' in words or 'bluetooth' in words: words = words + ['lithium']
     if 'soda' in words: words = words + ['sodium']
     if 'trap' in words or ('pumping' not in words and 'imaging' not in words and ('sodium' in words or 'lithium' in words)):
         if 'lithium' in words:
@@ -190,7 +190,7 @@ def labwork(text, quiet, conversation_stream):
         if not quiet: speaker.speaktext('Aborting')
         logger.info('esc')
         keysend('escape')
-    elif 'run' in words or 'running' in words or 'sequence' in words and 'trap' not in words:
+    elif 'run' in words or 'running' in words or 'sequence' in words or 'consequence' in words and 'trap' not in words:
         if 'list' in words or 'twelve' in words:
             if not quiet: speaker.speaktext('Running list')
             logger.info('F12')
@@ -198,7 +198,7 @@ def labwork(text, quiet, conversation_stream):
         elif 'background' in words:
             if not quiet: speaker.speaktext('Running in background')
             logger.info('CTRL-F9')
-            keysend('F9')
+            keysend('F9', 'Ctrl')
         else:
             if not quiet: speaker.speaktext('Running sequence')
             logger.info('F9')
@@ -207,6 +207,9 @@ def labwork(text, quiet, conversation_stream):
         if not quiet: speaker.speaktext('Okay. Doing nothing.')
         logger.info('CTRL-Z')
         keysend('Z', 'Ctrl')
+    elif 'close' in words:
+        logger.info('space')
+        keysend('space')
     elif 'lights' in words or 'room' in words:
         try:
             if 'off' in words:
@@ -234,7 +237,7 @@ def labwork(text, quiet, conversation_stream):
     elif 'why' in words:
         if not quiet: speaker.speaktext('Because you told me so.')
         logger.info('Classic matlab')
-    elif 'igor' in words:
+    elif 'ybor' in words or 'igor' in words:
         if not quiet: speaker.speaktext('Igor? I prefer python.')
     elif 'morning' in words:
         if not quiet: speaker.speaktext('Good morning!')
@@ -460,7 +463,7 @@ serio = io.TextIOWrapper(io.BufferedRWPair(ser,ser,1), newline='\r\n', line_buff
 switch = switchmate.Switch()
 
 # Start listening with snowboy
-detector = snowboydecoder.HotwordDetector(model, sensitivity=0.6)
+detector = snowboydecoder.HotwordDetector(model, sensitivity=0.7)
 print('Listening... Press Ctrl+C to exit')
 
 # Load OAuth 2.0 credentials.
