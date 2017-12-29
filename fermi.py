@@ -440,7 +440,7 @@ def testCallback():
 
 def fermiCallback():
     detector.terminate()
-    os.system('mplayer resources/dong.wav')
+#    os.system('mplayer resources/dong.wav')
     assistant.converse()
     detector.start(detected_callback=callback_to_use, interrupt_check=interrupt_callback,sleep_time=0.03)
 
@@ -463,7 +463,7 @@ serio = io.TextIOWrapper(io.BufferedRWPair(ser,ser,1), newline='\r\n', line_buff
 switch = switchmate.Switch()
 
 # Start listening with snowboy
-detector = snowboydecoder.HotwordDetector(model, sensitivity=0.7)
+detector = snowboydecoder.HotwordDetector(model, sensitivity=0.6)
 print('Listening... Press Ctrl+C to exit')
 
 # Load OAuth 2.0 credentials.
