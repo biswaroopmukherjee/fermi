@@ -19,7 +19,7 @@ import lab.snowboy.snowboydecoder as snowboydecoder
 
 # Initialization
 verbose = True
-model = 'resources/Fermi 3.pmdl'
+model = 'lab/snowboy/resources/Fermi 3.pmdl'
 
 interrupted = False
 detector = None

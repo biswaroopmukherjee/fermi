@@ -58,6 +58,8 @@ class FermiAssistant(object):
         self.lab = lab
 
         # Load OAuth 2.0 credentials.
+        
+        credentials = '/home/pi/.config/google-oauthlib-tool/credentials.json'
         try:
             with open(credentials, 'r') as f:
                 credentials = google.oauth2.credentials.Credentials(token=None,

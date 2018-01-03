@@ -21,7 +21,7 @@ class Keyboard(object):
 		self.logger = logging.getLogger("fermi")
 
 
-	def keysend(letter, modifier=None):
+	def keysend(self, letter, modifier=None):
 	    """ a simpler keyboard function
 		Usage:
 		keysend('L', 'Ctrl')  sends the key to the keyboard
@@ -32,7 +32,7 @@ class Keyboard(object):
                 self.logger.error("Can't type! Check the bluetooth keyboard pairing.")
 
 
-	def atcommand(command):
+	def atcommand(self, command):
 	    """Executes the supplied AT command and waits for a valid response"""
 	    self.serio.write(command + "\n")
 	    self.logger.info(command+"\r\n")

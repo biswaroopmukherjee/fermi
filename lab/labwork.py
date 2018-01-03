@@ -9,6 +9,7 @@
 ##################################################
 
 import logging
+import re
 from lab.devices.arxiv_reader import Reader
 from lab.devices.BLE_keyboard import Keyboard
 from lab.devices.switchmate import Switch
@@ -24,6 +25,7 @@ class Lab(object):
         self.keyboard = Keyboard()
         self.switch = Switch()
         self.logger = logging.getLogger("fermi")
+        self.name = name
 
     # NLP preprocessor for lab related stuff. If this fails, fall back on google
     def work(self, text, quiet, conversation_stream):
