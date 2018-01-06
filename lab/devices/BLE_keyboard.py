@@ -40,7 +40,7 @@ class Keyboard(object):
 	    rx = None
 	    while rx != b"OK!\r\n" and rx != "FAILED!\r\n":
 	        rx = self.ser.readline()
-	        logger.debug(str(rx))
+	        self.logger.debug(str(rx))
 	    # Check the return value
 	    if rx == "FAILED!\r\n":
 	        raise ValueError("AT Parser reported an error on '" + command.rstrip() + "'")

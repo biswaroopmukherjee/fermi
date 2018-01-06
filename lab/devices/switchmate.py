@@ -81,11 +81,11 @@ class Switch(object):
 		""" Switch the switchmate on or off
 		Usage: switch('on')
 		"""
-		logger.info('Setting up switch connection')
+		self.logger.info('Setting up switch connection')
 		device = Peripheral(self.mac_address, ADDR_TYPE_RANDOM)
 		notifications = NotificationDelegate(device)
 		device.setDelegate(notifications)
-		logger.info('Sending switch command')
+		self.logger.info('Sending switch command')
 		auth_key = unhexlify(self.auth_key)
 		device.writeCharacteristic(STATE_NOTIFY_HANDLE, NOTIFY_VALUE, True)
 		if state == 'on':
@@ -104,10 +104,10 @@ class Switch(object):
 		try:
 			self.switch('on')
 		except:
-			self.logger.error("Can't switch the switch")
+			self.logger.info("Note: bluepy still gives an error here")
 
 	def turn_off(self):
 		try:
 			self.switch('off')
 		except:
-			self.logger.error("Can't switch the switch")
+			self.logger.info("Note: bluepy still gives an error here")
