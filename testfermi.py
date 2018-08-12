@@ -36,16 +36,6 @@ def interrupt_callback():
     global interrupted
     return interrupted
 
-# Define callbacks for snowboy
-def testCallback():
-    logger = logging.getLogger("fermi")
-    logger.info('Hi! Speak friend.')
-
-def fermiCallback():
-    detector.terminate()
-    assistant.assist()
-    detector.start(detected_callback=fermiCallback, interrupt_check=interrupt_callback,sleep_time=0.03)
-
 
 # Setup logger.
 logging.basicConfig()
@@ -60,13 +50,5 @@ signal.signal(signal.SIGINT, signal_handler)
 # Setup the lab and the assistant
 lab = Lab(name='fermi 3')
 assistant = FermiAssistant(lab)
+assistant.assist()
 
-
-# Start listening with snowboy
-detector = snowboydecoder.HotwordDetector(model, sensitivity=0.6)
-print('Listening... Press Ctrl+C to exit')
-
-# main loop
-detector.start(detected_callback=fermiCallback, interrupt_check=interrupt_callback,sleep_time=0.03)
-
-detector.terminate()

@@ -33,6 +33,7 @@ class Lab(object):
         playstandard = False
         quietout = quiet
         text = text.lower()
+        text = re.sub('\.','', text)
         words = re.split(' ', text)
         speaker = TTS(conversation_stream)
         if 'listen' in words: words = words + ['lithium']

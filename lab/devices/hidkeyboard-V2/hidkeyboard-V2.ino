@@ -135,8 +135,8 @@ void setup(void)
   ble.info();
 
   /* Change the device name to make it easier to find */
-  Serial.println(F("Setting device name to 'Bluefruit Keyboard': "));
-  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Bluefruit Keyboard" )) ) {
+  Serial.println(F("Setting device name to 'Fermi Bluefruit Keyboard': "));
+  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Fermi Bluefruit Keyboard" )) ) {
     error(F("Could not set device name?"));
   }
 

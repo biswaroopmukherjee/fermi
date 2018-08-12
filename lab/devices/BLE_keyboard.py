@@ -13,12 +13,17 @@ import io
 import serial
 import logging
 
+
+# Setup logger.
+logging.basicConfig()
+
 class Keyboard(object):
 	""" A Keyboard class"""
 	def __init__(self, port='/dev/ttyACM0'):
-		self.ser = serial.Serial(port='/dev/ttyACM0', baudrate=115200, rtscts=True)
+		self.ser = serial.Serial(port='/dev/ttyACM1', baudrate=115200, rtscts=True)
 		self.serio = io.TextIOWrapper(io.BufferedRWPair(self.ser,self.ser,1), newline='\r\n', line_buffering=True)
-		self.logger = logging.getLogger("fermi")
+		self.logger = logging.getLogger("keyboard")
+		self.logger.setLevel(logging.DEBUG)
 
 
 	def keysend(self, letter, modifier=None):
