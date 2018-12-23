@@ -4,3 +4,6 @@
 *.wav
 *.csv
 *.DS_Store
+*.wav
+*.pmdl
+*config.txt
