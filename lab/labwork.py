@@ -88,14 +88,10 @@ class Lab(object):
             if not quiet: speaker.speaktext('Okay. Doing nothing.')
             self.logger.info('CTRL-Z')
             self.keyboard.keysend('Z', 'Ctrl')
-        elif 'lights' in words or 'room' in words:
+        elif 'lights' in words or 'room' in words or 'light' in words:
             try:
-                if 'off' in words:
-                    if not quiet: speaker.speaktext('Turning off room lights.')
-                    self.switch.turn_off()
-                else:
-                    if not quiet: speaker.speaktext('Turning on room lights.')
-                    self.switch.turn_on()
+                self.switch.switch()
+                if not quiet: speaker.speaktext('Okay.')
             except:
                 self.logger.debug('well I need to fix this error')
         elif 'quiet' in words or 'shut' in words:
